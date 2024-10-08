@@ -1,7 +1,9 @@
 import puppeteer from "puppeteer";
 
-import "../embed_tweet.css"
 import { Suspense } from "react";
+
+// https://stackoverflow.com/a/73800613
+import "../embed_tweet.css"
 
 // remove quoted tweet, return cleaned HTML of tweet and url of quoted tweet
 async function createCleanedEmbedHTML(html) {
@@ -70,7 +72,7 @@ async function TweetEmbed({ url }) {
 function StreamingTimeline({ url }) {
     return (
         <Suspense>
-
+            <TweetEmbed url={url} />
         </Suspense>
     )
 }
@@ -80,10 +82,7 @@ export default function Timeline({ url }) {
     return (
         <div>
             <h4 className="text-left text-2xl font-semibold mb-3">Timeline</h4>
-            {/* <StreamingTimeline url={url} /> */}
-            <div id='timeline'>
-                <TweetEmbed url={url} />
-            </div>
+            <StreamingTimeline url={url} />
         </div>
     )
 }

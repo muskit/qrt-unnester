@@ -24,14 +24,13 @@ function checkURL(url) {
       return "URL is not of a post!"
     }
   } catch (ex) {
-    console.log(ex)
     return "Input is not a URL!"
   }
   return null
 }
 
 function TryTimeline(props) {
-  console.log(`trying to construct timeline with ${props.url}`)
+  console.log(`beginning to unnest ${props.url}`)
 
   let err = checkURL(props.url)
   if (err != null) {
@@ -42,7 +41,6 @@ function TryTimeline(props) {
 }
 
 const Page = ({ searchParams }) => {
-  console.log(searchParams)
   // nesting server-comp inside client-comp: https://www.youtube.com/shorts/fmubeX_z2ik
   return (
     <Body>
