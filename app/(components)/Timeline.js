@@ -1,7 +1,10 @@
 import puppeteer from "puppeteer";
 
+import "../embed_tweet.css"
+import { Suspense } from "react";
+
 // remove quoted tweet, return cleaned HTML of tweet and url of quoted tweet
-async function createCleanedPost(html) {
+async function createCleanedEmbedHTML(html) {
     const browser = await puppeteer.launch({
         // headless: false,
         defaultViewport: null
@@ -13,49 +16,73 @@ async function createCleanedPost(html) {
 
     // get iframe
     let iframeHandle = await page.$("iframe[id=twitter-widget-0]")
-    let iframe = await iframeHandle.contentFrame()
+    let iframe
+    try {
+        iframe = await iframeHandle.contentFrame()
+    } catch {
+        return null
+    }
 
-    // search for element in iframe
-    let search = await iframe.evaluate(() => {
+    // work inside iframe
+    let nextQRT = await iframe.evaluate(() => {
         document.bgColor = 'red'
 
         let result = document.getElementsByTagName("article")
+        let nextQRT
 
-        if (result.length < 2) {
-            return document.querySelector('*').outerHTML // no quote tweet found
+        if (result.length >= 2) {
+            const qrtElem = result.item(1)
+            // get next qrt link
+            nextQRT = qrtElem.getElementsByTagName('a')[0].getAttribute("href")
+
+            // remove quoted tweet from view
+            qrtElem.parentElement.remove()
         }
-
-        // TODO: get quote tweet url
-
-        result.item(1).parentElement.remove()
-        return document.querySelector('*').outerHTML
+        return nextQRT
     })
 
-    await browser.close()
+    const qrtHTML = await iframe.content()
+    browser.close()
+
+    return { html: qrtHTML, next_quote: nextQRT }
+
 }
 
-async function getEmbedQuoted(url) {
+async function TweetEmbed({ url }) {
 
     const response = await fetch(`https://publish.twitter.com/oembed?url=${url}&dnt=true&hide_thread=true`)
-    const json = await response.json()
+    let json
+    try {
+        json = await response.json()
+    } catch {
+        return <div>Invalid Tweet!</div>
+    }
 
-    return createCleanedPost(json.html)
+    const qrt = await createCleanedEmbedHTML(json.html)
+
+    if (qrt == null) {
+        return <div>Error: Could not get post!</div>
+    }
+
+    return <div dangerouslySetInnerHTML={{ __html: qrt.html }} />
 }
 
-export default async function Timeline(props) {
+function StreamingTimeline({ url }) {
+    return (
+        <Suspense>
 
-    let url = props.url
+        </Suspense>
+    )
+}
 
-    // while (url != null) {
-
-    // }
-
-    let html = await getEmbedQuoted(url)
+export default function Timeline({ url }) {
 
     return (
         <div>
-            <h4 className="text-left text-2xl font-semibold">Timeline</h4>
+            <h4 className="text-left text-2xl font-semibold mb-3">Timeline</h4>
+            {/* <StreamingTimeline url={url} /> */}
             <div id='timeline'>
+                <TweetEmbed url={url} />
             </div>
         </div>
     )
