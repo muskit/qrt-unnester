@@ -45,9 +45,9 @@ function StreamingTimeline({ url }) {
     }, [done, curURL, twtHTMLs])
 
     return (
-        <div className="tweet-listing">
+        <div className="tweet-listing space-y-4">
             {twtHTMLs.map((x) => {
-                return <div className="mb-4" dangerouslySetInnerHTML={{ __html: x.html }} key={x.id} />
+                return <div dangerouslySetInnerHTML={{ __html: x.html }} key={x.id} />
             })}
             {!done && <Loading />}
         </div>
