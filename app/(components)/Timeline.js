@@ -16,12 +16,11 @@ function StreamingTimeline({ url }) {
     const [twtHTMLs, setTwtHTMLs] = useState([])
 
     useEffect(() => {
-        console.log("rendering StreamingTimeline")
-
         async function populateTweets() {
             if (done) return
 
             if (curURL == null) {
+                console.log(`finished unnesting! there are ${twtHTMLs.length} tweets (including start).`)
                 setDone(true)
                 return
             }
@@ -31,7 +30,7 @@ function StreamingTimeline({ url }) {
             if (!res.ok) {
                 const msg = await res.text()
                 // TODO: make error visible
-                console.log(`response not ok: ${msg}`)
+                console.log(`response from backend not ok: ${msg}`)
                 setDone(true)
                 return
             }
@@ -56,7 +55,6 @@ function StreamingTimeline({ url }) {
 }
 
 export default function Timeline({ url }) {
-    useEffect(() => console.log("rendering Timeline"))
     return (
         <div>
             <h4 className="text-left text-2xl font-semibold mb-3">Timeline</h4>

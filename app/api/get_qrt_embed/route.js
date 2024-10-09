@@ -15,7 +15,7 @@ function getTweetId(urlStr) {
 async function createCleanEmbed(html, browser) {
     const page = await browser.newPage()
     await page.setContent(html, {
-        waitUntil: "networkidle2"
+        waitUntil: "networkidle0"
     })
 
     // get iframe
@@ -29,8 +29,6 @@ async function createCleanEmbed(html, browser) {
 
     // work inside iframe
     let nextQRT = await iframe.evaluate(() => {
-        document.bgColor = 'red'
-
         let result = document.getElementsByTagName("article")
         let nextQRT
 
@@ -38,16 +36,24 @@ async function createCleanEmbed(html, browser) {
         if (result.length >= 2) {
             const qrtElem = result.item(1)
             // get next qrt link
-            nextQRT = qrtElem.getElementsByTagName('a')[0].getAttribute("href")
+            const qrtSearch = qrtElem.getElementsByTagName('a')
+            console.log(`search results: ${qrtSearch.length}`)
+            nextQRT = qrtSearch[0].getAttribute("href")
 
-            // remove quoted tweet from view
-            qrtElem.parentElement.remove()
+            if (nextQRT == null) {
+                console.log(`nextQRT wasn\'t found; leaving page intact`)
+            } else {
+
+                // remove quoted tweet from view
+                qrtElem.parentElement.remove()
+            }
         }
         return nextQRT
     })
 
     const qrtHTML = await iframe.content()
-    await page.close()
+    if (nextQRT != null)
+        await page.close()
 
     const res = { html: qrtHTML, next_qrt: nextQRT }
     return res
@@ -60,9 +66,11 @@ export async function GET(req) {
         return new Response("missing url parameter", { status: 400 })
     }
 
-    console.log(`Processing ${url}`)
+    const id = getTweetId(url)
+    // TODO: cache return by id
+    console.log(`Processing ${id}`)
 
-    // remove URL tracking that interferes with oembed API call
+    // remove URL tracking that interferes with oEmbed API call
     const urlTmp = new URL(url)
     urlTmp.search = ""
     url = urlTmp.href
@@ -76,7 +84,6 @@ export async function GET(req) {
         json = JSON.parse(restxt)
     } catch (err) {
         // TODO: appropriate error handling
-        // return <div>Ran into invalid tweet {url}!</div>
         console.log(`err: ${restxt}`)
         return new Response(`bad tweet URL: ${err}`, { status: 400 })
     }
@@ -84,13 +91,14 @@ export async function GET(req) {
     // modify embed
     const browser = await puppeteer.launch({
         // headless: false,
-        defaultViewport: null
+        defaultViewport: { width: 1366, height: 768 }
     })
 
     const data = await createCleanEmbed(json.html, browser)
 
+    // if (data.next_qrt != null)
     browser.close()
 
-    data.id = getTweetId(url)
+    data.id = id
     return Response.json(data)
 }
