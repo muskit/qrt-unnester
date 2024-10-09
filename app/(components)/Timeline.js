@@ -1,84 +1,62 @@
-import puppeteer from "puppeteer";
+'use client';
 
-import { Suspense } from "react";
+import { useEffect, useState, } from "react";
 
 // https://stackoverflow.com/a/73800613
 import "../embed_tweet.css"
 
-// remove quoted tweet, return cleaned HTML of tweet and url of quoted tweet
-async function createCleanedEmbedHTML(html) {
-    const browser = await puppeteer.launch({
-        // headless: false,
-        defaultViewport: null
-    })
-    const page = await browser.newPage()
-    await page.setContent(html, {
-        waitUntil: "networkidle2"
-    })
-
-    // get iframe
-    let iframeHandle = await page.$("iframe[id=twitter-widget-0]")
-    let iframe
-    try {
-        iframe = await iframeHandle.contentFrame()
-    } catch {
-        return null
-    }
-
-    // work inside iframe
-    let nextQRT = await iframe.evaluate(() => {
-        document.bgColor = 'red'
-
-        let result = document.getElementsByTagName("article")
-        let nextQRT
-
-        if (result.length >= 2) {
-            const qrtElem = result.item(1)
-            // get next qrt link
-            nextQRT = qrtElem.getElementsByTagName('a')[0].getAttribute("href")
-
-            // remove quoted tweet from view
-            qrtElem.parentElement.remove()
-        }
-        return nextQRT
-    })
-
-    const qrtHTML = await iframe.content()
-    browser.close()
-
-    return { html: qrtHTML, next_quote: nextQRT }
-
-}
-
-async function TweetEmbed({ url }) {
-
-    const response = await fetch(`https://publish.twitter.com/oembed?url=${url}&dnt=true&hide_thread=true`)
-    let json
-    try {
-        json = await response.json()
-    } catch {
-        return <div>Invalid Tweet!</div>
-    }
-
-    const qrt = await createCleanedEmbedHTML(json.html)
-
-    if (qrt == null) {
-        return <div>Error: Could not get post!</div>
-    }
-
-    return <div dangerouslySetInnerHTML={{ __html: qrt.html }} />
+// TODO: add pizzazz
+const Loading = () => {
+    return <div>Loading...</div>
 }
 
 function StreamingTimeline({ url }) {
+    const [done, setDone] = useState(false)
+    const [curURL, setCurURL] = useState(url)
+    const [twtHTMLs, setTwtHTMLs] = useState([])
+
+    useEffect(() => {
+        console.log("rendering StreamingTimeline")
+
+        async function populateTweets() {
+            if (done) return
+
+            if (curURL == null) {
+                setDone(true)
+                return
+            }
+
+            let res = await fetch(`/api/get_qrt_embed?url=${curURL}`)
+
+            if (!res.ok) {
+                const msg = await res.text()
+                // TODO: make error visible
+                console.log(`response not ok: ${msg}`)
+                setDone(true)
+                return
+            }
+
+            const json = await res.json()
+            setTwtHTMLs([...twtHTMLs, { html: json.html, id: json.id }])
+            setCurURL(json.next_qrt)
+        }
+
+        if (!done)
+            populateTweets()
+    }, [done, curURL, twtHTMLs])
+
     return (
-        <Suspense>
-            <TweetEmbed url={url} />
-        </Suspense>
+        <div className="tweet-listing">
+            {twtHTMLs.map((x) => {
+                return <div className="mb-4" dangerouslySetInnerHTML={{ __html: x.html }} key={x.id} />
+            })}
+            {!done && <Loading />}
+        </div>
     )
 }
 
 export default function Timeline({ url }) {
-
+    useEffect(() => console.log("rendering Timeline"))
     return (
         <div>
             <h4 className="text-left text-2xl font-semibold mb-3">Timeline</h4>

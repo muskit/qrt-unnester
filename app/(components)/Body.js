@@ -1,8 +1,10 @@
 'use client';
 
+import { useEffect } from "react";
 import Entry from "./Entry"
 
 export default function Body({ children }) {
+    useEffect(() => console.log("rendering Body"))
     return (
         <div className="text-center min-h-screen flex h-screen">
             <div className="m-auto max-w-[540px]">

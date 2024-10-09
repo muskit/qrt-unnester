@@ -30,8 +30,6 @@ function checkURL(url) {
 }
 
 function TryTimeline(props) {
-  console.log(`beginning to unnest ${props.url}`)
-
   let err = checkURL(props.url)
   if (err != null) {
     return <p className="text-red-500"><strong>Error: </strong>{err}</p>
@@ -45,7 +43,8 @@ const Page = ({ searchParams }) => {
   return (
     <Body>
       {searchParams != null && searchParams.hasOwnProperty('url') &&
-        <TryTimeline url={searchParams.url} />
+        // <TryTimeline url={searchParams.url} />
+        <Timeline url={searchParams.url} />
       }
     </Body>
   )

@@ -25,7 +25,15 @@ body {
   font-family: "Geist VF", Arial, Helvetica, sans-serif;
 }
 
-@layer components {}
+@layer components {
+  .tweet-listing {
+    @apply flex flex-col
+  }
+
+  .tweet-listing-reverse {
+    @apply flex flex-col-reverse
+  }
+}
 
 @layer utilities {
   .text-balance {
