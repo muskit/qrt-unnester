@@ -1,5 +1,6 @@
 import Timeline from "./(components)/Timeline";
 import Body from "./(components)/Body";
+import { Error } from "./(components)/Error";
 
 function checkURL(url) {
   try {
@@ -32,10 +33,12 @@ function checkURL(url) {
 function TryTimeline(props) {
   let err = checkURL(props.url)
   if (err != null) {
-    return <p className="text-red-500"><strong>Error: </strong>{err}</p>
+    return <Error msg={err} />
   }
 
-  return <Timeline url={props.url} />
+  return (
+    <Timeline url={props.url} />
+  )
 }
 
 const Page = ({ searchParams }) => {
@@ -43,8 +46,7 @@ const Page = ({ searchParams }) => {
   return (
     <Body>
       {searchParams != null && searchParams.hasOwnProperty('url') &&
-        // <TryTimeline url={searchParams.url} />
-        <Timeline url={searchParams.url} />
+        <TryTimeline url={searchParams.url} />
       }
     </Body>
   )

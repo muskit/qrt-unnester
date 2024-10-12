@@ -1,6 +1,4 @@
 'use client';
-
-import { useEffect } from "react";
 import Entry from "./Entry"
 
 export default function Body({ children }) {
@@ -21,9 +19,7 @@ export default function Body({ children }) {
                         <input name="reverse" type='checkbox' className='mr-1 inline-block' onChange={el => { }} />
                         Don't show posts until all retrieved (useful for avoiding comic spoilers!)
                     </label>
-                    {/* <span className="inline-block">List nested posts in reverse order</span> */}
                 </div>
-                <div className="pt-7" />
                 {children}
             </div>
         </div>

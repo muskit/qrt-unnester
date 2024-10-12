@@ -1,18 +1,25 @@
-import puppeteer, { Browser } from "puppeteer";
 
-function getTweetId(urlStr) {
+import { Browser } from "puppeteer";
+
+export function getTweetId(urlStr) {
     const url = new URL(urlStr)
     let split = url.pathname.split("/");
     return split[3];
+}
+
+export function removeURLParams(url) {
+    const urlTmp = new URL(url)
+    urlTmp.search = ""
+    return urlTmp.href
 }
 
 /**
  * Return HTML of tweet with quoted tweet hidden, and url of quoted tweet
  * @param {string} html The HTMl returned by Twitter's oEmbed for a Tweet.
  * @param {Browser} browser 
- * @returns { { html: string, next_quote: string } }
+ * @returns { { html: string, next_qrt: string } }
  */
-async function createCleanEmbed(html, browser) {
+export async function createCleanEmbed(html, browser) {
     const page = await browser.newPage()
     await page.setContent(html, {
         waitUntil: "networkidle0"
@@ -52,53 +59,42 @@ async function createCleanEmbed(html, browser) {
     })
 
     const qrtHTML = await iframe.content()
-    if (nextQRT != null)
-        await page.close()
+    await page.close()
 
     const res = { html: qrtHTML, next_qrt: nextQRT }
     return res
 
 }
 
-export async function GET(req) {
-    let url = req.nextUrl.searchParams.get('url')
-    if (url == null) {
-        return new Response("missing url parameter", { status: 400 })
-    }
-
-    const id = getTweetId(url)
-    // TODO: cache return by id
-    console.log(`Processing ${id}`)
-
+/**
+ * Returns a Tweet embed with unnested URL in "body".
+ * @param {string} url 
+ * @param {Browser} browser 
+ * @returns {{status: string, body: any}}
+ */
+export async function embedAndUnnest(url, browser) {
     // remove URL tracking that interferes with oEmbed API call
-    const urlTmp = new URL(url)
-    urlTmp.search = ""
-    url = urlTmp.href
+    url = removeURLParams(url)
 
     // get oEmbed for curTweetURL
     const response = await fetch(`https://publish.twitter.com/oembed?url=${url}&dnt=true&hide_thread=true`)
-    const restxt = await response.text()
+    if (!response.ok) {
+        return { status: "error", body: `From Twitter: ${response.status} ${response.statusText}` }
+    }
+
+    const txt = await response.text()
     let json
     try {
-        // json = await response.json()
-        json = JSON.parse(restxt)
+        json = JSON.parse(txt)
     } catch (err) {
-        // TODO: appropriate error handling
-        console.log(`err: ${restxt}`)
-        return new Response(`bad tweet URL: ${err}`, { status: 400 })
+        return { status: "error", body: `couldn't parse oEmbed JSON: ${err}` }
     }
 
     // modify embed
-    const browser = await puppeteer.launch({
-        // headless: false,
-        defaultViewport: { width: 1366, height: 768 }
-    })
-
     const data = await createCleanEmbed(json.html, browser)
-
-    // if (data.next_qrt != null)
-    browser.close()
-
-    data.id = id
-    return Response.json(data)
+    data.id = getTweetId(url)
+    return {
+        status: "success",
+        body: data
+    }
 }
