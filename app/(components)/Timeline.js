@@ -115,8 +115,8 @@ export default function Timeline({ url }) {
     return (
         <div className="my-6">
             <h4 className="text-left text-2xl font-semibold mb-3">Timeline</h4>
-            {/* <StreamingTimeline url={url} /> */}
-            <ApiTimeline url={url} />
+            <StreamingTimeline url={url} />
+            {/* <ApiTimeline url={url} /> */}
         </div>
     )
 }
