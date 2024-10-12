@@ -5,6 +5,7 @@ import { embedAndUnnest, } from "@/app/(utils)/utils";
 import { iteratorToStream } from "@/app/(utils)/stream";
 
 async function* tweetStreamIterator(url) {
+    // TODO: detect recursion
     let curURL = url
 
     const browser = await puppeteer.launch({
@@ -22,7 +23,7 @@ async function* tweetStreamIterator(url) {
             else {
                 // error -- stop
                 yield JSON.stringify(data)
-                return
+                break
             }
             curURL = data.body.next_qrt
         }
@@ -30,6 +31,8 @@ async function* tweetStreamIterator(url) {
         await browser.close()
         throw err
     }
+
+    browser.close()
 }
 
 export async function GET(req) {
