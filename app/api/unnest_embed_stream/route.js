@@ -17,7 +17,6 @@ async function* tweetStreamIterator(url) {
         while (curURL != null) {
             const data = await embedAndUnnest(curURL, browser)
             if (data.status == "success") {
-                data.status = "success"
                 yield JSON.stringify(data)
             }
             else {
