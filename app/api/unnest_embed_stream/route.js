@@ -4,7 +4,7 @@ import puppeteer from "puppeteer";
 import { embedAndUnnest, } from "@/app/(utils)/utils";
 import { iteratorToStream } from "@/app/(utils)/stream";
 
-async function* tweetStreamIterator(url) {
+async function* tweetUnnestIterator(url) {
     // TODO: detect recursion
     let curURL = url
 
@@ -40,6 +40,6 @@ export async function GET(req) {
         return new Response("missing url parameter", { status: 400 })
     }
 
-    const stream = iteratorToStream(tweetStreamIterator(url))
+    const stream = iteratorToStream(tweetUnnestIterator(url))
     return new Response(stream)
 }

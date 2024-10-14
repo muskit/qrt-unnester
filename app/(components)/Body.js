@@ -17,7 +17,7 @@ export default function Body({ children }) {
                     <br />
                     <label>
                         <input name="reverse" type='checkbox' className='mr-1 inline-block' onChange={el => { }} />
-                        Don't show posts until all retrieved (useful for avoiding comic spoilers!)
+                        Don&apos;t show posts until all retrieved (useful for avoiding comic spoilers!)
                     </label>
                 </div>
                 {children}
