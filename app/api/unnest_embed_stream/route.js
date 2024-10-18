@@ -10,7 +10,9 @@ async function* tweetUnnestIterator(url) {
 
     const browser = await puppeteer.launch({
         // headless: false,
-        defaultViewport: { width: 1366, height: 768 }
+        defaultViewport: { width: 1366, height: 768 },
+        executablePath: '/usr/bin/chromium-browser', // use with sys-installed Chromium
+        args: ["--no-sandbox"],
     })
 
     try {
