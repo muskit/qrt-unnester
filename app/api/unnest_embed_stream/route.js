@@ -5,7 +5,7 @@ import { embedAndUnnest, } from "@/app/(utils)/utils";
 import { iteratorToStream } from "@/app/(utils)/stream";
 
 async function* tweetUnnestIterator(url) {
-    // TODO: detect recursion
+    let visited = new Set()
     let curURL = url
 
     const browser = await puppeteer.launch({
@@ -20,20 +20,31 @@ async function* tweetUnnestIterator(url) {
             const data = await embedAndUnnest(curURL, browser)
             if (data.status == "success") {
                 yield JSON.stringify(data)
+
+                // recursion prevention
+                // TODO: TEST
+                if (visited.has(data.body.id)) {
+                    yield JSON.stringify({
+                        status: "error",
+                        body: "unnested a post that we've already unnested!"
+                    })
+                    break
+                }
+                visited.add(data.body.id)
+                curURL = data.body.next_qrt
             }
             else {
                 // error -- stop
                 yield JSON.stringify(data)
                 break
             }
-            curURL = data.body.next_qrt
         }
     } catch (err) {
         await browser.close()
         throw err
     }
 
-    browser.close()
+    await browser.close()
 }
 
 export async function GET(req) {
