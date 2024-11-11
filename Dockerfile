@@ -17,6 +17,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN npm ci
 
+# Running as non-root breaks Chromium process spawning from NodeJS
 # RUN addgroup -g 1001 -S nodejs
 # RUN adduser -S nextjs -u 1001
 # USER nextjs

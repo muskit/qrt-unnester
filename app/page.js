@@ -1,8 +1,13 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation'
+
 import Timeline from "./(components)/Timeline";
 import Body from "./(components)/Body";
 import { Error } from "./(components)/Error";
 
 function checkURL(url) {
+  console.log(url)
   try {
     url = new URL(url);
 
@@ -31,6 +36,7 @@ function checkURL(url) {
 }
 
 function TryTimeline(props) {
+  console.log(props)
   let err = checkURL(props.url)
   if (err != null) {
     return <Error msg={err} />
@@ -41,12 +47,14 @@ function TryTimeline(props) {
   )
 }
 
-const Page = ({ searchParams }) => {
+const Page = () => {
+  const searchParams = useSearchParams()
+
   // nesting server-comp inside client-comp: https://www.youtube.com/shorts/fmubeX_z2ik
   return (
     <Body>
-      {searchParams != null && searchParams.hasOwnProperty('url') &&
-        <TryTimeline url={searchParams.url} />
+      {searchParams.has('url') &&
+        <TryTimeline url={searchParams.get('url')} />
       }
     </Body>
   )

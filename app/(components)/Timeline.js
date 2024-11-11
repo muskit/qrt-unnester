@@ -1,6 +1,7 @@
 'use client';
 
-import { useContext, useEffect, useState, } from "react";
+import { useRef, useEffect, useState, } from "react";
+var Mutex = require("async-mutex").Mutex
 
 // https://stackoverflow.com/a/73800613
 import "../embed_tweet.css"
@@ -63,32 +64,54 @@ function StreamingTimeline({ url }) {
     const [lastResp, setLastResp] = useState({ done: false, value: null })
     const [errMsg, setErrMsg] = useState()
 
+    const mutex = useRef(new Mutex())
+
     useEffect(() => {
         async function consumeTweetStream() {
+            console.log("CALLED CONSUME!")
             if (!initialized) {
-                const resp = await fetch(`/api/unnest_embed_stream?url=${url}`)
+                // const resp = await fetch(`/api/unnest_embed_stream?url=${url}`)
+                const resp = await fetch("https://owtxh3s67y27i5o2wnofmdkfna0xtben.lambda-url.us-east-1.on.aws/", {
+                    body: JSON.stringify({ "url": url }),
+                    method: "POST"
+                })
                 const newReader = resp.body.getReader()
                 setReader(newReader)
                 setInitialized(true)
                 return
             }
 
+            // stream had finished
             if (lastResp.done) {
+                console.log("last response was final")
                 if (!done) // avoid triggering unnecessary re-render
                     setDone(true)
                 return
             }
 
-            // wait for next encoded chunk
-            // const { done, value } = await reader.read();
-            const resp = await reader.read()
-            setLastResp(resp)
+            let chunkStr = ""
+            while (chunkStr.charAt(chunkStr.length - 1) != "\n") {
+                const resp = await reader.read()
+                const respStr = new TextDecoder().decode(resp.value)
+                console.log(`got chunk: ${respStr}`)
+                setLastResp(resp)
+                chunkStr += respStr
 
-            // check if stream is now done
-            if (resp.done) return
+                if (resp.done) {
+                    console.log("chunk part has done=true!")
+                    break
+                }
+            }
+            chunkStr.trim()
 
-            const str = new TextDecoder().decode(resp.value)
-            const data = JSON.parse(str)
+            if (chunkStr == "") {
+                console.log("stream has ended!")
+                return
+            }
+
+            // console.log(`-------str(data)-------\n${chunkStr}`)
+
+            const data = JSON.parse(chunkStr)
             if (data.status != "success") {
                 setErrMsg(data.body)
             } else {
@@ -97,7 +120,8 @@ function StreamingTimeline({ url }) {
             }
         }
 
-        consumeTweetStream()
+        if (!mutex.current.isLocked())
+            mutex.current.runExclusive(async () => consumeTweetStream())
     }, [initialized, lastResp, reader, twtHTMLs, url, done])
 
     return (

@@ -9,12 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "async-mutex": "^0.5.0",
     "next": "14.2.14",
-    "puppeteer": "^23.5.1",
     "react": "^18",
     "react-cookie": "^7.2.0",
-    "react-dom": "^18",
-    "twitter-widgets": "^2.0.0"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "eslint": "^8",
