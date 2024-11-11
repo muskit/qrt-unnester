@@ -5,9 +5,12 @@ export default function Body({ children }) {
     return (
         <div className="text-center min-h-screen flex h-screen">
             <div className="m-auto max-w-[540px]">
-                <h1 className="text-5xl font-bold py-5">
-                    Quote Tweet Unnester
-                </h1>
+                <div className="py-5">
+                    <h1 className="text-5xl font-bold ">
+                        Quote Tweet Unnester
+                    </h1>
+                    <b className="text-xl">Indev!</b>
+                </div>
                 <Entry />
                 <div className="pt-4 text-left">
                     <label>
