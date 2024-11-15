@@ -1,6 +1,6 @@
 # Quote Tweet Unnester
 
-A WIP web tool for making nested quote posts more readable.
+A web tool for making nested quote posts more readable.
 
 - [the site](https://muskit.net/qrt-unnester)
 - [the backend](https://github.com/muskit/qrt-unnest-api)
